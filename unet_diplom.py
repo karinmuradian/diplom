@@ -16,7 +16,7 @@ import onnxruntime as ort
 import cv2
 from keras.utils import normalize
 
-st.title('Сегментация объектов на снимках')
+st.title('**Сегментация объектов на снимках**')
 
 def load_model ():
 
@@ -39,7 +39,7 @@ def load_image():
 
 def preprocess_image(img):
     #img = Image.open(img).convert ('RGB')
-    img = image.smart_resize(img, (224, 224))
+    img = image.smart_resize(img, (256, 256))
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=3)
     x = normalize(x, axis =1)
@@ -47,10 +47,14 @@ def preprocess_image(img):
     return x
      
 def get_predictions (model, x):
-    img_input = model.get_inputs ()
-    mask_output = model.get_outputs()
-    preds =model.run(([mask_output]), input_feed ={img_input: np.asarray([x]).astype(np.float32)})
-    scores = np.argmax(preds, axis=3)[0,:,:]
+    model.get_inputs()[0].shape
+    model.get_inputs()[0].type
+    x_norm =x[:,:,0][:,:,None]
+    x_input = np.expand_dims(x_norm, 0)
+    input_name = model.get_inputs()[0].name
+    output_name = model.get_outputs()[0].name
+    preds =model.run(([output_name]), input_feed ={input_name: x_input})
+    scores = np.argmax (preds, axis = 3)[0,:,:]
     st.image (scores, cmap = 'twilight')
     return scores 
 
@@ -58,8 +62,10 @@ def get_predictions (model, x):
 model = load_model()
 img = load_image()
 result = st.button('Создать маску')
+            
 if result:
     x = preprocess_image(img)
     get_predictions(model,x)
     st.write('**Предсказанная маска**')
+
 
