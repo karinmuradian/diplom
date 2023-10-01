@@ -1,7 +1,5 @@
 
 
-
-
 import io
 import streamlit as st
 from PIL import Image
@@ -15,6 +13,7 @@ from keras.applications.efficientnet import preprocess_input, decode_predictions
 import onnxruntime as ort
 import cv2
 from keras.utils import normalize
+
 
 st.title('**Сегментация объектов на снимках**')
 
@@ -38,26 +37,25 @@ def load_image():
 
 
 def preprocess_image(img):
-    #img = Image.open(img).convert ('RGB')
+ 
     img = image.smart_resize(img, (256, 256))
     x = image.img_to_array(img)
-    x = np.expand_dims(x, axis=3)
-    x = normalize(x, axis =1)
+    x = np.transpose(np.expand_dims(x, axis=0), (3, 2, 1, 0) )
     x = preprocess_input(x)
+
     return x
-     
+
+import numpy 
+
 def get_predictions (model, x):
     model.get_inputs()[0].shape
     model.get_inputs()[0].type
-    x_norm =x[:,:,0][:,:,None]
-    x_input = np.expand_dims(x_norm, 0)
     input_name = model.get_inputs()[0].name
     output_name = model.get_outputs()[0].name
-    preds =model.run(([output_name]), input_feed ={input_name: x_input})
+    #preds =model.run(([output_name]), input_feed ={input_name: x})
+    preds =model.run([output_name], {input_name: x.astype(numpy.float32)})[0]
     scores = np.argmax (preds, axis = 3)[0,:,:]
-    st.image (scores, cmap = 'twilight')
     return scores 
-
 
 model = load_model()
 img = load_image()
@@ -65,7 +63,8 @@ result = st.button('Создать маску')
             
 if result:
     x = preprocess_image(img)
-    get_predictions(model,x)
-    st.write('**Предсказанная маска**')
-
+    scores = get_predictions(model,x)
+    st.write ('**Предсказанная маска**')
+    st.image (scores) 
+ 
 
