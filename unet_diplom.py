@@ -13,6 +13,7 @@ from keras.applications.efficientnet import preprocess_input, decode_predictions
 import onnxruntime as ort
 import cv2
 from keras.utils import normalize
+import matplotlib.pyplot as plt
 
 
 st.title('**Сегментация объектов на снимках**')
@@ -65,6 +66,11 @@ if result:
     x = preprocess_image(img)
     scores = get_predictions(model,x)
     st.write ('**Предсказанная маска**')
-    st.image (scores) 
+    
+    plt.figure(figsize=(12, 8))
+    plt.subplot(233)
+    plt.imshow(scores, cmap='twilight')
+    fig, ax = plt.subplots()
+    st.pyplot(fig)
  
 
